@@ -1,0 +1,46 @@
+{% extends "dashboard.html" %}
+
+{% block page_title %}Панель{% endblock %}
+{% block page_subtitle %}Создание, редактирование и подтверждение заявок.{% endblock %}
+
+{% block sidebar %}
+  <div class="side-block">
+    <div class="side-title">Кабинет</div>
+    <a class="side-link active" href="{{ url_for('main.manage') }}">Обзор</a>
+    <a class="side-link" href="{{ url_for('main.manage_applications', status='pending') }}">Заявки <span class="pill">{{ pending_apps }}</span></a>
+    <a class="side-link" href="{{ url_for('main.manage_reports', status='pending') }}">Отчёты <span class="pill">{{ pending_reports }}</span></a>
+    <div class="side-sep"></div>
+    <a class="side-link" href="{{ url_for('main.event_new') }}">Создать мероприятие</a>
+    <a class="side-link" href="{{ url_for('main.task_new') }}">Создать задание</a>
+    {% if current_user.role == 'admin' %}
+      <div class="side-sep"></div>
+      <a class="side-link" href="{{ url_for('main.admin_panel') }}">Админка</a>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block dash_content %}
+  <div class="card">
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Заявки на рассмотрении</div>
+        <div class="kpi-value">{{ pending_apps }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Отчёты на проверке</div>
+        <div class="kpi-value">{{ pending_reports }}</div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="form-actions">
+      <a class="btn primary" href="{{ url_for('main.event_new') }}">Новое мероприятие</a>
+      <a class="btn primary" href="{{ url_for('main.task_new') }}">Новое задание</a>
+      <a class="btn secondary" href="{{ url_for('main.manage_applications', status='pending') }}">Открыть заявки</a>
+      <a class="btn secondary" href="{{ url_for('main.manage_reports', status='pending') }}">Открыть отчёты</a>
+    </div>
+
+    <div class="small" style="margin-top:10px;">Редактировать/удалять мероприятия и задания можно из списка или со страницы карточки (кнопки видны только владельцу/админу).</div>
+  </div>
+{% endblock %}

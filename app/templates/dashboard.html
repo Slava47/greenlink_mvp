@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{# Generic dashboard layout: sidebar + main content. #}
+
+{% block content %}
+<div class="dash">
+  <aside class="dash-sidebar" aria-label="Навигация кабинета">
+    {% block sidebar %}{% endblock %}
+  </aside>
+
+  <section class="dash-main">
+    <div class="page-head">
+      <div class="page-head-left">
+        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+        <div class="page-subtitle">{% block page_subtitle %}{% endblock %}</div>
+      </div>
+      <div class="page-head-actions">{% block page_actions %}{% endblock %}</div>
+    </div>
+
+    {% block dash_content %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

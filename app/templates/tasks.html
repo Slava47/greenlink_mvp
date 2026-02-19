@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="page-head page-head--public" style="margin-top:16px;">
+    <div class="page-head-left">
+      <h1 class="page-title">Задания</h1>
+      <div class="page-subtitle">Выполняйте задания и отправляйте отчёты после подтверждения.</div>
+    </div>
+    <div class="page-head-actions">
+      {% if current_user and current_user.role in ['admin','organizer'] %}
+        <a class="btn primary" href="{{ url_for('main.task_new') }}">Создать задание</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    {% for t in tasks %}
+      <div class="list-item">
+        <div class="list-main">
+          <div class="list-title"><a href="{{ url_for('main.task_detail', task_id=t.id) }}">{{ t.name }}</a></div>
+          {% if t.description %}<div class="list-text">{{ t.description }}</div>{% endif %}
+          <div class="list-meta">Баллы: {{ t.points }} · Заявок: {{ t.appl_count }}{% if t.max_participants %} / {{ t.max_participants }}{% endif %}</div>
+          {% if t.link %}<div class="list-meta">Ссылка: <a href="{{ t.link }}" target="_blank" rel="noreferrer">открыть</a></div>{% endif %}
+        </div>
+
+        <div class="list-actions">
+          <span class="badge">{{ (t.start_time or "без даты")|replace('T',' ') }}</span>
+          {% if current_user and (current_user.role == 'admin' or (current_user.role == 'organizer' and t.created_by == current_user.id)) %}
+            <div class="btn-row" style="justify-content:flex-end;">
+              <a class="btn tiny secondary" href="{{ url_for('main.task_edit', task_id=t.id) }}">Редакт.</a>
+              <form method="post" action="{{ url_for('main.task_delete', task_id=t.id) }}" onsubmit="return confirm('Удалить задание?');">
+                {{ csrf_field() }}
+                <button class="btn tiny danger" type="submit">Удалить</button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="empty">
+        <h3>Пока нет заданий</h3>
+        <div class="meta">Создайте первое задание или зайдите позже — список обновится.</div>
+        {% if current_user and current_user.role in ['admin','organizer'] %}
+          <div class="form-actions"><a class="btn primary" href="{{ url_for('main.task_new') }}">Создать задание</a></div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

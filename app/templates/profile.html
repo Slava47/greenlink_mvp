@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="grid" style="margin-top:16px;">
+    <div class="card">
+      <h2>Профиль</h2>
+      <div class="meta">Данные используются для заявок и отчётов.</div>
+      <div class="hr"></div>
+
+      <form method="post">
+        {{ csrf_field() }}
+        <label>ФИО</label>
+        <input name="full_name" value="{{ current_user.full_name or '' }}">
+
+        {% if current_user.role == 'volunteer' %}
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Группа</label>
+            <input name="group_name" value="{{ current_user.group_name or '' }}">
+          </div>
+          <div>
+            <label>Факультет</label>
+            <input name="faculty" value="{{ current_user.faculty or '' }}">
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Возраст</label>
+            <input name="age" value="{{ current_user.age or '' }}">
+          </div>
+          <div>
+            <label>Учебное заведение</label>
+            <select name="university_id">
+              <option value="">—</option>
+              {% for un in universities %}
+                <option value="{{ un.id }}" {% if current_user.university_id == un.id %}selected{% endif %}>{{ un.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% else %}
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Возраст</label>
+            <input name="age" value="{{ current_user.age or '' }}">
+          </div>
+        </div>
+
+        <label style="margin-top:10px;">Где учились/учитесь</label>
+        <textarea name="education_text" rows="3">{{ current_user.education_text or '' }}</textarea>
+
+        <label style="margin-top:10px;">О себе</label>
+        <textarea name="bio_text" rows="4">{{ current_user.bio_text or '' }}</textarea>
+        {% endif %}
+
+<div class="form-actions">
+          <button class="btn" type="submit">Сохранить</button>
+        </div>
+      </form>
+
+      <div class="hr"></div>
+      <div class="small">Предупреждения: <strong>{{ current_user.warnings_count }}</strong>{% if current_user.is_blocked %} · <strong style="color:var(--danger);">заблокирован</strong>{% endif %}</div>
+    </div>
+
+    <div class="card">
+      <h2>Активность</h2>
+      <div class="meta">Ваши заявки и отчёты.</div>
+      <div class="hr"></div>
+
+      <h3>Заявки на мероприятия</h3>
+      {% for a in my_event_apps %}
+        <div class="small"><strong>{{ a.event_name }}</strong> · статус: {{ a.status }} · баллы: {{ a.event_points }}</div>
+      {% else %}
+        <div class="small">Нет.</div>
+      {% endfor %}
+
+      <div class="hr"></div>
+
+      <h3>Заявки на задания</h3>
+      {% for a in my_task_apps %}
+        <div class="small"><strong>{{ a.task_name }}</strong> · статус: {{ a.status }} · баллы: {{ a.task_points }}</div>
+      {% else %}
+        <div class="small">Нет.</div>
+      {% endfor %}
+
+      <div class="hr"></div>
+
+      <h3>Отчёты по мероприятиям</h3>
+      {% for r in my_event_reports %}
+        <div class="small"><strong>{{ r.event_name }}</strong> · статус: {{ r.status }}</div>
+      {% else %}
+        <div class="small">Нет.</div>
+      {% endfor %}
+
+      <div class="hr"></div>
+
+      <h3>Отчёты по заданиям</h3>
+      {% for r in my_task_reports %}
+        <div class="small"><strong>{{ r.task_name }}</strong> · статус: {{ r.status }}</div>
+      {% else %}
+        <div class="small">Нет.</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

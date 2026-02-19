@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "GreenLink" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="{{ url_for('main.index') }}" aria-label="На главную">
+        <span class="brand-name">GreenLink</span>
+        <span class="brand-badge">Пилот</span>
+      </a>
+
+      <button class="burger" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="header-panel" id="header-panel">
+        <nav class="nav" aria-label="Основная навигация">
+          <a class="nav-link" href="{{ url_for('main.events') }}">Мероприятия</a>
+          <a class="nav-link" href="{{ url_for('main.tasks') }}">Задания</a>
+          <a class="nav-link" href="{{ url_for('main.about') }}">О платформе</a>
+          {% if current_user %}
+            <a class="nav-link" href="{{ url_for('main.profile') }}">Профиль</a>
+            {% if current_user.role in ['admin','organizer'] %}
+              <a class="nav-link" href="{{ url_for('main.manage') }}">Панель</a>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+              <a class="nav-link" href="{{ url_for('main.admin_panel') }}">Админка</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+
+        <div class="top-actions">
+          {% if current_user %}
+            {% set role_labels = {'admin':'Администратор','organizer':'Организатор','volunteer':'Волонтёр'} %}
+            <div class="points">Баллы: <strong>{{ current_user.points }}</strong></div>
+            <details class="user">
+              <summary class="user-sum">
+                <span class="user-name">{{ current_user.username }}</span>
+                <span class="user-role">{{ role_labels.get(current_user.role, current_user.role) }}</span>
+              </summary>
+              <div class="user-menu" role="menu">
+                <a class="menu-item" href="{{ url_for('main.profile') }}">Профиль</a>
+                {% if current_user.role in ['admin','organizer'] %}
+                  <a class="menu-item" href="{{ url_for('main.manage') }}">Панель</a>
+                {% endif %}
+                {% if current_user.role == 'admin' %}
+                  <a class="menu-item" href="{{ url_for('main.admin_panel') }}">Админка</a>
+                {% endif %}
+                <div class="menu-sep"></div>
+                <a class="menu-item danger" href="{{ url_for('main.logout') }}">Выйти</a>
+              </div>
+            </details>
+          {% else %}
+            <a class="btn ghost" href="{{ url_for('main.login') }}">Войти</a>
+            <a class="btn primary" href="{{ url_for('main.register') }}">Регистрация</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {# Mobile overlay menu (drawer). Rendered separately to avoid layout issues on phones. #}
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+      <div class="mobile-backdrop" data-close="1"></div>
+      <div class="mobile-drawer" role="dialog" aria-modal="true" aria-label="Меню">
+        <div class="mobile-drawer-head">
+          <div class="mobile-title-pill">Меню</div>
+          <button class="mobile-close" type="button" id="mobile-close" aria-label="Закрыть" data-close="1">×</button>
+        </div>
+
+        <div class="mobile-scroll">
+
+          {% if current_user %}
+            {% set role_labels = {'admin':'Администратор','organizer':'Организатор','volunteer':'Волонтёр'} %}
+            <div class="mobile-meta">
+              <div class="mobile-pill">Баллы: <strong>{{ current_user.points }}</strong></div>
+              <div class="mobile-user">
+                <div class="mobile-user-name">{{ current_user.username }}</div>
+                <div class="mobile-user-role">{{ role_labels.get(current_user.role, current_user.role) }}</div>
+              </div>
+            </div>
+          {% endif %}
+
+          <nav class="mobile-nav" aria-label="Навигация">
+            <a class="mobile-link" href="{{ url_for('main.events') }}">Мероприятия</a>
+            <a class="mobile-link" href="{{ url_for('main.tasks') }}">Задания</a>
+            <a class="mobile-link" href="{{ url_for('main.about') }}">О платформе</a>
+
+            {% if current_user %}
+              <a class="mobile-link" href="{{ url_for('main.profile') }}">Профиль</a>
+              {% if current_user.role in ['admin','organizer'] %}
+                <a class="mobile-link" href="{{ url_for('main.manage') }}">Панель</a>
+              {% endif %}
+              {% if current_user.role == 'admin' %}
+                <a class="mobile-link" href="{{ url_for('main.admin_panel') }}">Админка</a>
+              {% endif %}
+
+              <a class="mobile-link mobile-link-danger" href="{{ url_for('main.logout') }}">Выйти</a>
+            {% else %}
+              <a class="mobile-link" href="{{ url_for('main.login') }}">Войти</a>
+              <a class="mobile-link" href="{{ url_for('main.register') }}">Регистрация</a>
+            {% endif %}
+          </nav>
+
+        </div>
+      </div>
+    </div>
+
+  <main class="container page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="flash {{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+
+
+  <script>
+    (function(){
+      var burger = document.getElementById('burger');
+      var menu = document.getElementById('mobile-menu');
+      if (!burger || !menu) return;
+
+      function setOpen(open){
+        if (open){
+          menu.classList.add('open');
+          menu.setAttribute('aria-hidden','false');
+          burger.setAttribute('aria-expanded','true');
+          document.body.classList.add('nav-open');
+        } else {
+          menu.classList.remove('open');
+          menu.setAttribute('aria-hidden','true');
+          burger.setAttribute('aria-expanded','false');
+          document.body.classList.remove('nav-open');
+        }
+      }
+
+      burger.addEventListener('click', function(){
+        setOpen(!menu.classList.contains('open'));
+      });
+
+      // Close actions
+      menu.addEventListener('click', function(e){
+        var t = e.target;
+        if (!t) return;
+        if (t.getAttribute('data-close') === '1') setOpen(false);
+        if (t.tagName === 'A') setOpen(false);
+      });
+
+      // Escape key
+      window.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && menu.classList.contains('open')) setOpen(false);
+      });
+
+      // On desktop force-close
+      window.addEventListener('resize', function(){
+        if (window.innerWidth >= 980 && menu.classList.contains('open')) setOpen(false);
+      });
+    })();
+  </script>
+</body>
+</html>

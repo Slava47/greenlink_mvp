@@ -1,0 +1,138 @@
+{% extends "dashboard.html" %}
+
+{% block page_title %}Отчёты{% endblock %}
+{% block page_subtitle %}Проверка отчётов по вашим мероприятиям и заданиям.{% endblock %}
+
+{% block page_actions %}
+  <a class="btn secondary" href="{{ url_for('main.manage') }}">К обзору</a>
+{% endblock %}
+
+{% block sidebar %}
+  <div class="side-block">
+    <div class="side-title">Кабинет</div>
+    <a class="side-link" href="{{ url_for('main.manage') }}">Обзор</a>
+    <a class="side-link" href="{{ url_for('main.manage_applications', status='pending') }}">Заявки</a>
+    <a class="side-link active" href="{{ url_for('main.manage_reports', status=status) }}">Отчёты</a>
+    <div class="side-sep"></div>
+    <a class="side-link" href="{{ url_for('main.event_new') }}">Создать мероприятие</a>
+    <a class="side-link" href="{{ url_for('main.task_new') }}">Создать задание</a>
+  </div>
+{% endblock %}
+
+{% block dash_content %}
+  <div class="card">
+    <div class="tabs" role="tablist" aria-label="Фильтр статуса">
+      {% set items = [
+        ('pending','На проверке'),
+        ('approved','Принятые'),
+        ('rejected','Отклонённые'),
+        ('all','Все')
+      ] %}
+      {% for key, label in items %}
+        {% set total = (counts[key]['events'] + counts[key]['tasks']) %}
+        <a class="tab {% if status==key %}active{% endif %}" href="{{ url_for('main.manage_reports', status=key) }}">
+          {{ label }} <span class="pill">{{ total }}</span>
+        </a>
+      {% endfor %}
+    </div>
+    {% if status in ['all','approved'] %}
+      <div class="small" style="margin-top:10px;">Принятые отчёты показываются компактно (последние 10), чтобы не перегружать страницу.</div>
+    {% endif %}
+  </div>
+
+  <div class="dash-grid" style="margin-top:14px;">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">Мероприятия <span class="pill">{{ counts[status]['events'] }}</span></h3>
+      </div>
+
+      {% if event_reports %}
+        {% for r in event_reports %}
+          <div class="list-item">
+            <div class="list-main">
+              <div class="list-title"><a href="{{ url_for('main.event_detail', event_id=r.event_id) }}">{{ r.item_name }}</a></div>
+              <div class="list-meta">Волонтёр: {{ r.username }} • Статус: {{ r.status }} • {{ r.created_at }}</div>
+              {% if r.report_text %}
+                <div class="list-text">{{ r.report_text }}</div>
+              {% endif %}
+              {% if r.media_path %}
+                <div class="list-meta" style="margin-top:8px;">
+                  Файл: <a href="{{ url_for('main.uploads', filename=r.media_path) }}">открыть</a>
+                  <form method="post" action="{{ url_for('main.manage_delete_event_report_file', report_id=r.id) }}" style="display:inline;">
+                    {{ csrf_field() }}
+                    <button class="btn tiny danger" type="submit" onclick="return confirm('Удалить файл отчёта?');">Удалить файл</button>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="list-actions">
+              {% if r.status != 'принят' %}
+                <form method="post" action="{{ url_for('main.manage_approve_event_report', report_id=r.id) }}">
+                  {{ csrf_field() }}
+                  <button class="btn tiny" type="submit">Принять</button>
+                </form>
+                <form method="post" action="{{ url_for('main.manage_reject_event_report', report_id=r.id) }}">
+                  {{ csrf_field() }}
+                  <button class="btn tiny danger" type="submit">Отклонить</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">
+          <h3>Пока нет отчётов по мероприятиям</h3>
+          <div class="meta">Когда волонтёры отправят отчёты, они появятся здесь.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">Задания <span class="pill">{{ counts[status]['tasks'] }}</span></h3>
+      </div>
+
+      {% if task_reports %}
+        {% for r in task_reports %}
+          <div class="list-item">
+            <div class="list-main">
+              <div class="list-title"><a href="{{ url_for('main.task_detail', task_id=r.task_id) }}">{{ r.item_name }}</a></div>
+              <div class="list-meta">Волонтёр: {{ r.username }} • Статус: {{ r.status }} • {{ r.created_at }}</div>
+              {% if r.report_text %}
+                <div class="list-text">{{ r.report_text }}</div>
+              {% endif %}
+              {% if r.media_path %}
+                <div class="list-meta" style="margin-top:8px;">
+                  Файл: <a href="{{ url_for('main.uploads', filename=r.media_path) }}">открыть</a>
+                  <form method="post" action="{{ url_for('main.manage_delete_task_report_file', report_id=r.id) }}" style="display:inline;">
+                    {{ csrf_field() }}
+                    <button class="btn tiny danger" type="submit" onclick="return confirm('Удалить файл отчёта?');">Удалить файл</button>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="list-actions">
+              {% if r.status != 'принят' %}
+                <form method="post" action="{{ url_for('main.manage_approve_task_report', report_id=r.id) }}">
+                  {{ csrf_field() }}
+                  <button class="btn tiny" type="submit">Принять</button>
+                </form>
+                <form method="post" action="{{ url_for('main.manage_reject_task_report', report_id=r.id) }}">
+                  {{ csrf_field() }}
+                  <button class="btn tiny danger" type="submit">Отклонить</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">
+          <h3>Пока нет отчётов по заданиям</h3>
+          <div class="meta">Когда волонтёры отправят отчёты, они появятся здесь.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

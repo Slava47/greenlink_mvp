@@ -1,0 +1,240 @@
+{% extends "dashboard.html" %}
+
+{% block page_title %}Админка{% endblock %}
+{% block page_subtitle %}Пользователи, учебные заведения и модерация отчётов.{% endblock %}
+
+{% block sidebar %}
+  <div class="side-block">
+    <div class="side-title">Администрирование</div>
+    <a class="side-link" href="#users">Пользователи</a>
+    <a class="side-link" href="#reports-events">Отчёты: мероприятия</a>
+    <a class="side-link" href="#reports-tasks">Отчёты: задания</a>
+    <div class="side-sep"></div>
+    <a class="side-link" href="#export">Экспорт</a>
+    <a class="side-link" href="#unis">Учебные заведения</a>
+    <div class="side-sep"></div>
+    <a class="side-link" href="{{ url_for('main.manage') }}">Панель</a>
+  </div>
+{% endblock %}
+
+{% block page_actions %}
+  <a class="btn secondary" href="{{ url_for('main.manage') }}">К панели</a>
+{% endblock %}
+
+{% block dash_content %}
+  <div class="dash-grid">
+    <div class="card" id="export">
+      <div class="card-head">
+        <h3 class="card-title">Экспорт</h3>
+        <div class="card-meta">Выгрузка данных для отчётности (CSV).</div>
+      </div>
+      <div class="form-actions" style="margin-top:10px;">
+        <a class="btn secondary" href="{{ url_for('main.admin_export_users') }}">Пользователи</a>
+        <a class="btn secondary" href="{{ url_for('main.admin_export_events') }}">Мероприятия</a>
+        <a class="btn secondary" href="{{ url_for('main.admin_export_reports') }}">Отчёты</a>
+      </div>
+    </div>
+
+    <div class="card" id="unis">
+      <div class="card-head">
+        <h3 class="card-title">Учебные заведения</h3>
+      </div>
+      <form method="post" action="{{ url_for('main.admin_university_add') }}">
+        {{ csrf_field() }}
+        <div class="row">
+          <div><input name="name" placeholder="Название"></div>
+          <div style="max-width:160px;"><button class="btn" type="submit">Добавить</button></div>
+        </div>
+      </form>
+      <div class="hr"></div>
+      <div class="table-wrap">
+        <table class="table">
+          <tr><th>Название</th><th style="width:140px;"></th></tr>
+          {% for un in unis %}
+            <tr>
+              <td>{{ un.name }}</td>
+              <td>
+                <form method="post" action="{{ url_for('main.admin_university_delete', uni_id=un.id) }}" onsubmit="return confirm('Удалить?');">
+                  {{ csrf_field() }}
+                  <button class="btn danger" type="submit">Удалить</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="2" class="small">Пока нет.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="users" style="grid-column:1 / -1;">
+      <div class="card-head">
+        <div>
+          <h3 class="card-title">Пользователи</h3>
+          <div class="card-meta">3 предупреждения автоматически блокируют аккаунт.</div>
+        </div>
+      </div>
+
+      <form method="get" action="{{ url_for('main.admin_panel') }}" style="margin-top:10px;">
+        <div class="row">
+          <div><input name="q" value="{{ q or '' }}" placeholder="Поиск по логину или ФИО"></div>
+          <div style="max-width:160px;"><button class="btn secondary" type="submit">Искать</button></div>
+        </div>
+      </form>
+
+      <div class="hr"></div>
+      <div class="table-wrap">
+        <table class="table">
+          <tr>
+            <th>ID</th><th>Логин</th><th>Роль</th><th>Баллы</th><th>Пред.</th><th>Статус</th><th>Действия</th>
+          </tr>
+          {% for u in users %}
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>
+                <strong>{{ u.username }}</strong>
+                <div class="small">{{ u.full_name or "" }}</div>
+                <div class="small">{{ u.university_name }}</div>
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('main.admin_user_role', user_id=u.id) }}">
+                  {{ csrf_field() }}
+                  <select name="role">
+                    <option value="volunteer" {% if u.role=='volunteer' %}selected{% endif %}>volunteer</option>
+                    <option value="organizer" {% if u.role=='organizer' %}selected{% endif %}>organizer</option>
+                    <option value="admin" {% if u.role=='admin' %}selected{% endif %}>admin</option>
+                  </select>
+                  <div style="height:8px;"></div>
+                  <button class="btn secondary" type="submit">Сохранить</button>
+                </form>
+              </td>
+              <td>{{ u.points }}</td>
+              <td>{{ u.warnings_count }}</td>
+              <td>
+                {% if u.is_blocked %}
+                  <span class="badge danger">blocked</span>
+                {% else %}
+                  <span class="badge">active</span>
+                {% endif %}
+              </td>
+              <td style="width:260px;">
+                {% if current_user and current_user.id == u.id %}
+                  <span class="small" style="color:var(--muted);">Для себя недоступно</span>
+                {% else %}
+                  <div class="btn-row">
+                    <form method="post" action="{{ url_for('main.admin_user_warn', user_id=u.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny secondary" type="submit">Предупр.</button>
+                    </form>
+                    <form method="post" action="{{ url_for('main.admin_user_toggle_block', user_id=u.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny danger" type="submit">{% if u.is_blocked %}Разблок{% else %}Блок{% endif %}</button>
+                    </form>
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-grid" style="margin-top:14px;">
+    <div class="card" id="reports-events">
+      <div class="card-head">
+        <h3 class="card-title">Отчёты по мероприятиям</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <tr><th>Мероприятие</th><th>Волонтёр</th><th>Текст</th><th>Файл</th><th>Статус</th><th>Действия</th></tr>
+          {% for r in event_reports %}
+            <tr>
+              <td><a href="{{ url_for('main.event_detail', event_id=r.event_id) }}">{{ r.item_name }}</a></td>
+              <td>{{ r.username }}</td>
+              <td class="small" style="max-width:320px;">{{ (r.report_text or '')[:120] }}{% if r.report_text and r.report_text|length > 120 %}…{% endif %}</td>
+              <td>
+                {% if r.media_path %}
+                  <a href="{{ url_for('main.uploads', filename=r.media_path) }}">открыть</a>
+                  <form method="post" action="{{ url_for('main.manage_delete_event_report_file', report_id=r.id) }}" style="display:inline;">
+                    {{ csrf_field() }}
+                    <button class="btn tiny danger" type="submit" onclick="return confirm('Удалить файл отчёта?');">Удалить</button>
+                  </form>
+                {% else %}
+                  <span class="small">—</span>
+                {% endif %}
+              </td>
+              <td class="small">{{ r.status }}</td>
+              <td style="width:220px;">
+                {% if r.status != 'принят' %}
+                  <div class="btn-row">
+                    <form method="post" action="{{ url_for('main.admin_approve_event_report', report_id=r.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny" type="submit">Принять</button>
+                    </form>
+                    <form method="post" action="{{ url_for('main.admin_reject_event_report', report_id=r.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny danger" type="submit">Отклонить</button>
+                    </form>
+                  </div>
+                {% else %}
+                  <span class="small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="small">Нет отчётов.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="reports-tasks">
+      <div class="card-head">
+        <h3 class="card-title">Отчёты по заданиям</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <tr><th>Задание</th><th>Волонтёр</th><th>Текст</th><th>Файл</th><th>Статус</th><th>Действия</th></tr>
+          {% for r in task_reports %}
+            <tr>
+              <td><a href="{{ url_for('main.task_detail', task_id=r.task_id) }}">{{ r.item_name }}</a></td>
+              <td>{{ r.username }}</td>
+              <td class="small" style="max-width:320px;">{{ (r.report_text or '')[:120] }}{% if r.report_text and r.report_text|length > 120 %}…{% endif %}</td>
+              <td>
+                {% if r.media_path %}
+                  <a href="{{ url_for('main.uploads', filename=r.media_path) }}">открыть</a>
+                  <form method="post" action="{{ url_for('main.manage_delete_task_report_file', report_id=r.id) }}" style="display:inline;">
+                    {{ csrf_field() }}
+                    <button class="btn tiny danger" type="submit" onclick="return confirm('Удалить файл отчёта?');">Удалить</button>
+                  </form>
+                {% else %}
+                  <span class="small">—</span>
+                {% endif %}
+              </td>
+              <td class="small">{{ r.status }}</td>
+              <td style="width:220px;">
+                {% if r.status != 'принят' %}
+                  <div class="btn-row">
+                    <form method="post" action="{{ url_for('main.admin_approve_task_report', report_id=r.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny" type="submit">Принять</button>
+                    </form>
+                    <form method="post" action="{{ url_for('main.admin_reject_task_report', report_id=r.id) }}">
+                      {{ csrf_field() }}
+                      <button class="btn tiny danger" type="submit">Отклонить</button>
+                    </form>
+                  </div>
+                {% else %}
+                  <span class="small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="small">Нет отчётов.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

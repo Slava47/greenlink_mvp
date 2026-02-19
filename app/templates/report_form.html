@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card" style="max-width:760px; margin:16px auto;">
+    {% if kind == 'event' %}
+      <h2>Отчёт по мероприятию</h2>
+    {% else %}
+      <h2>Отчёт по заданию</h2>
+    {% endif %}
+    <div class="meta"><strong>{{ item.name }}</strong></div>
+    <div class="hr"></div>
+
+    <form method="post" enctype="multipart/form-data">
+      {{ csrf_field() }}
+      <label>Текст отчёта</label>
+      <textarea name="report_text" placeholder="Коротко опишите, что было сделано."></textarea>
+
+      <label style="margin-top:10px;">Файл (опционально)</label>
+      <input type="file" name="media">
+
+      <div class="form-actions">
+        <button class="btn" type="submit">Отправить</button>
+        <a class="btn secondary" href="{{ url_for('main.profile') }}">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

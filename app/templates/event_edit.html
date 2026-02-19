@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card" style="max-width:760px; margin:16px auto;">
+    <h2>{% if e %}Редактирование мероприятия{% else %}Новое мероприятие{% endif %}</h2>
+    <form method="post">
+      {{ csrf_field() }}
+      <label>Название</label>
+      <input name="name" required value="{{ e.name if e else '' }}">
+
+      <label style="margin-top:10px;">Описание</label>
+      <textarea name="description">{{ e.description if e else '' }}</textarea>
+
+      <label style="margin-top:10px;">Ссылка (опционально)</label>
+      <input name="link" value="{{ e.link if e else '' }}">
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Баллы</label>
+          <input name="points" value="{{ e.points if e else 0 }}">
+        </div>
+        <div>
+          <label>Макс. участников (0 = без лимита)</label>
+          <input name="max_participants" value="{{ e.max_participants if e else 0 }}">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Старт (ISO, например 2026-01-15T10:00:00)</label>
+          <input name="start_time" value="{{ e.start_time if e else '' }}">
+        </div>
+        <div>
+          <label>Окончание (ISO)</label>
+          <input name="end_time" value="{{ e.end_time if e else '' }}">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn" type="submit">{% if e %}Сохранить{% else %}Создать{% endif %}</button>
+        <a class="btn secondary" href="{{ url_for('main.events') }}">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

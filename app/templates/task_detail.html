@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card" style="margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+      <h2 style="margin:0;">{{ t.name }}</h2>
+      {% if current_user and (current_user.role == 'admin' or (current_user.role == 'organizer' and t.created_by == current_user.id)) %}
+        <div style="display:flex; gap:8px;">
+          <a class="btn secondary" href="{{ url_for('main.task_edit', task_id=t.id) }}">Редакт.</a>
+          <form method="post" action="{{ url_for('main.task_delete', task_id=t.id) }}" onsubmit="return confirm('Удалить задание?');">
+            {{ csrf_field() }}
+            <button class="btn danger" type="submit">Удалить</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+    <div class="meta">{{ t.description or "" }}</div>
+    <div class="hr"></div>
+
+    <div class="row">
+      <div>
+        <div class="small">Баллы: <strong>{{ t.points }}</strong></div>
+        <div class="small">Старт: <strong>{{ (t.start_time or "не указан")|replace('T',' ') }}</strong></div>
+        <div class="small">Дедлайн: <strong>{{ t.end_time or "не указан" }}</strong></div>
+        <div class="small">Заявок: <strong>{{ appl_count }}</strong>{% if t.max_participants %} / {{ t.max_participants }}{% endif %}</div>
+      </div>
+      <div>
+        {% if current_user and current_user.role == 'volunteer' %}
+          {% if my_app %}
+            <div class="card">
+              <strong>Ваша заявка</strong>
+              <div class="small">Статус: {{ my_app.status }}</div>
+              <div class="hr"></div>
+              {% if my_app.status == 'подтверждена' %}
+                <a class="btn" href="{{ url_for('main.report_task', task_id=t.id) }}">Отправить отчёт</a>
+              {% else %}
+                <div class="small">Отчёт доступен после подтверждения заявки.</div>
+              {% endif %}
+            </div>
+          {% else %}
+            <form method="post" action="{{ url_for('main.task_apply', task_id=t.id) }}" class="card">
+              {{ csrf_field() }}
+              <strong>Взять задание</strong>
+              <div class="form-actions">
+                <button class="btn" type="submit">Отправить заявку</button>
+              </div>
+            </form>
+          {% endif %}
+        {% else %}
+          <div class="small">Чтобы подать заявку, войдите как волонтёр.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

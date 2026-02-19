@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card" style="margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+      <h2 style="margin:0;">{{ e.name }}</h2>
+      {% if current_user and (current_user.role == 'admin' or (current_user.role == 'organizer' and e.created_by == current_user.id)) %}
+        <div style="display:flex; gap:8px;">
+          <a class="btn secondary" href="{{ url_for('main.event_edit', event_id=e.id) }}">Редакт.</a>
+          <form method="post" action="{{ url_for('main.event_delete', event_id=e.id) }}" onsubmit="return confirm('Удалить мероприятие?');">
+            {{ csrf_field() }}
+            <button class="btn danger" type="submit">Удалить</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+    <div class="meta">{{ e.description or "" }}</div>
+    <div class="hr"></div>
+
+    <div class="row">
+      <div>
+        <div class="small">Баллы: <strong>{{ e.points }}</strong></div>
+        <div class="small">Старт: <strong>{{ (e.start_time or "не указан")|replace('T',' ') }}</strong></div>
+        <div class="small">Окончание: <strong>{{ e.end_time or "не указано" }}</strong></div>
+        <div class="small">Участников: <strong>{{ appl_count }}</strong>{% if e.max_participants %} / {{ e.max_participants }}{% endif %}</div>
+        {% if e.link %}<div class="small">Ссылка: <a href="{{ e.link }}" target="_blank" rel="noreferrer">открыть</a></div>{% endif %}
+      </div>
+      <div>
+        {% if current_user and current_user.role == 'volunteer' %}
+          {% if my_app %}
+            <div class="card">
+              <strong>Ваша заявка</strong>
+              <div class="small">Статус: {{ my_app.status }}</div>
+              <div class="hr"></div>
+              {% if my_app.status == 'подтверждена' %}
+                <a class="btn" href="{{ url_for('main.report_event', event_id=e.id) }}">Отправить отчёт</a>
+              {% else %}
+                <div class="small">Отчёт доступен после подтверждения заявки.</div>
+              {% endif %}
+            </div>
+          {% else %}
+            <form method="post" action="{{ url_for('main.event_apply', event_id=e.id) }}" class="card">
+              {{ csrf_field() }}
+              <strong>Подать заявку</strong>
+              <div class="hr"></div>
+              <label class="small"><input type="checkbox" name="needs_release" value="1"> Нужен релиз</label><br/>
+              <label class="small"><input type="checkbox" name="needs_volunteer_hours" value="1"> Нужны часы волонтёра</label>
+              <div class="form-actions">
+                <button class="btn" type="submit">Отправить</button>
+              </div>
+            </form>
+          {% endif %}
+        {% else %}
+          <div class="small">Чтобы подать заявку, войдите как волонтёр.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

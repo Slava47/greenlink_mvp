@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="grid">
+    <div class="card">
+      <h2>Мероприятия</h2>
+      <div class="meta">Последние опубликованные мероприятия.</div>
+      <div class="hr"></div>
+      {% for e in events %}
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <a href="{{ url_for('main.event_detail', event_id=e.id) }}"><strong>{{ e.name }}</strong></a>
+            <div class="small">{{ e.description or "" }}</div>
+            <div class="small">Баллы: {{ e.points }} · Заявок: {{ e.appl_count }}{% if e.max_participants %} / {{ e.max_participants }}{% endif %}</div>
+          </div>
+          <span class="badge">{{ (e.start_time or "без даты")|replace('T',' ') }}</span>
+        </div>
+        {% if not loop.last %}<div class="hr"></div>{% endif %}
+      {% else %}
+        <div class="small">Пока нет мероприятий.</div>
+      {% endfor %}
+      <div class="hr"></div>
+      <a class="btn secondary" href="{{ url_for('main.events') }}">Открыть список</a>
+    </div>
+
+    <div class="card">
+      <h2>Задания</h2>
+      <div class="meta">Задачи для волонтёров.</div>
+      <div class="hr"></div>
+      {% for t in tasks %}
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <a href="{{ url_for('main.task_detail', task_id=t.id) }}"><strong>{{ t.name }}</strong></a>
+            <div class="small">{{ t.description or "" }}</div>
+            <div class="small">Баллы: {{ t.points }} · Заявок: {{ t.appl_count }}{% if t.max_participants %} / {{ t.max_participants }}{% endif %}</div>
+          </div>
+          <span class="badge">{{ (t.start_time or "без даты")|replace('T',' ') }}</span>
+        </div>
+        {% if not loop.last %}<div class="hr"></div>{% endif %}
+      {% else %}
+        <div class="small">Пока нет заданий.</div>
+      {% endfor %}
+      <div class="hr"></div>
+      <a class="btn secondary" href="{{ url_for('main.tasks') }}">Открыть список</a>
+    </div>
+  </div>
+{% endblock %}

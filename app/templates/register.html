@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card screen">
+    <center><div class="screen-pill">Регистрация</div></center>
+    <div class="hint">Давай знакомиться. Заполни данные и выбери роль.</div>
+    <form method="post">
+      {{ csrf_field() }}
+      <div class="row">
+        <div>
+          <label>Логин</label>
+          <input name="username" autocomplete="username" required>
+          <div class="small">Минимум 3 символа. Латиница/цифры — рекомендуются.</div>
+        </div>
+        <div>
+          <label>Пароль</label>
+          <input name="password" type="password" autocomplete="new-password" required>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <label>Роль</label>
+      <select name="role">
+        <option value="volunteer">Волонтёр</option>
+        <option value="organizer">Организатор</option>
+      </select>
+
+
+      <div class="form-actions" style="margin-top:14px;">
+        <button class="btn primary" type="submit">Создать аккаунт</button>
+        <a class="btn secondary" href="{{ url_for('main.login') }}">Уже есть аккаунт</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
